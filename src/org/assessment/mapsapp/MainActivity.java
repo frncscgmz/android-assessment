@@ -3,6 +3,12 @@ package org.assessment.mapsapp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.ObjectInputStream;
+import java.io.InputStreamReader;
+import java.net.URL; 
+import java.net.HttpURLConnection; 
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.util.GeoPoint;
@@ -13,6 +19,7 @@ import org.osmdroid.views.overlay.OverlayItem;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.AsyncTask;
 import android.view.Menu;
 import android.widget.Toast;
 
@@ -20,6 +27,7 @@ public class MainActivity extends Activity {
 
 	private static final double SEARCH_RADIUS_KM = 2;
 	private static final GeoPoint BERLIN = new GeoPoint(52.51, 13.40);
+	private static final int    CONECTION_TIMEOUT = 10000;
 	
 	private IMapController controller;
 	private MapView map;
@@ -63,15 +71,64 @@ public class MainActivity extends Activity {
 		// Show cars on map
 	}
 
-	private List<Car> getCars() {
-		
-		//  ###################################### TO IMPLEMENT  ###########################################
-		
-		// Read the JSON data from https://www.drive-now.com/php/metropolis/json.vehicle_filter?cit=6099
-		// Parse the data and fill a list of Car objects
-		
-		return Collections.emptyList();
-	}
+        private List<Car> getCars() {
+
+           //  ###################################### TO IMPLEMENT  ###########################################
+
+           // Read the JSON data from https://www.drive-now.com/php/metropolis/json.vehicle_filter?cit=6099
+           // Parse the data and fill a list of Car objects
+
+           return Collections.emptyList();
+        }
+
+        private class CarsAsyncTask extends AsyncTask<String, Void, List<Car>> {
+
+           @Override
+           protected List<Car> doInBackground(String... values) {
+              try {
+                 return loadCarsFromNetwork(values[0]);
+              } catch (IOException e) {
+                 return new ArrayList<Car>();
+              }
+           }
+
+           private List<Car> loadCarsFromNetwork(String urlString) 
+              throws IOException {
+              String jsonResult = null;
+              List<Car> lstCars = null;
+
+              jsonResult = downloadUrl(urlString);
+              if(jsonResult != null) {
+                 //lstCars = parseJson(jsonResult);
+              }
+
+              return new ArrayList<Car>();
+           }
+
+           private String downloadUrl(String urlString) 
+              throws IOException {
+              String jsonResult = null;
+              String line       = null;
+              StringBuilder sb  = new StringBuilder(); 
+
+              URL serverAddress             = new URL(urlString);
+              HttpURLConnection connection  = (HttpURLConnection)serverAddress
+                 .openConnection();
+              connection.setConnectTimeout(CONECTION_TIMEOUT);
+              connection.connect();
+
+              BufferedReader br = new BufferedReader(
+                    new InputStreamReader(connection.getInputStream()));
+              while((line = br.readLine()) != null) {
+                 sb.append(line);
+              }
+              br.close();
+              jsonResult = sb.toString();
+
+              return jsonResult;
+           }
+        }
+
 	
 	private List<Car> filterCarsByDistance(List<Car> cars, GeoPoint location, double searchRadiusKm) {
 		
