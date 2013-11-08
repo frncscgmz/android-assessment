@@ -17,17 +17,26 @@ import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.ItemizedIconOverlay.OnItemGestureListener;
 import org.osmdroid.views.overlay.OverlayItem;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONException;
+
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.AsyncTask;
 import android.view.Menu;
 import android.widget.Toast;
+import android.util.Log;
 
 public class MainActivity extends Activity {
 
-	private static final double SEARCH_RADIUS_KM = 2;
 	private static final GeoPoint BERLIN = new GeoPoint(52.51, 13.40);
-	private static final int    CONECTION_TIMEOUT = 10000;
+	private static final double SEARCH_RADIUS_KM = 2;
+	private static final int CONECTION_TIMEOUT   = 10000;
+        private static final String URL_CAR_SERVICE  = 
+           "https://www.drive-now.com/php/metropolis/json.vehicle_filter?cit=6099";
+        private final String DEBUG_TAG        = this.getClass().
+           getSimpleName();
 	
 	private IMapController controller;
 	private MapView map;
@@ -50,6 +59,7 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		initLocation();
+                new CarsAsyncTask().execute(URL_CAR_SERVICE);
 	}
 	
 	private void initLocation() {
@@ -88,18 +98,26 @@ public class MainActivity extends Activity {
               try {
                  return loadCarsFromNetwork(values[0]);
               } catch (IOException e) {
+                 Log.e(DEBUG_TAG,"Error: " + e);
+                 return new ArrayList<Car>();
+              } catch(JSONException e) {
+                 Log.e(DEBUG_TAG,"Error: " + e);
                  return new ArrayList<Car>();
               }
            }
 
            private List<Car> loadCarsFromNetwork(String urlString) 
-              throws IOException {
+              throws IOException,JSONException {
               String jsonResult = null;
               List<Car> lstCars = null;
 
               jsonResult = downloadUrl(urlString);
               if(jsonResult != null) {
-                 //lstCars = parseJson(jsonResult);
+                 Log.d(DEBUG_TAG,jsonResult);
+                 lstCars = parseJson(jsonResult);
+                 for(Car cr:lstCars) {
+                    Log.d(DEBUG_TAG,cr.name+" "+cr.address+" "+cr.position);
+                 }
               }
 
               return new ArrayList<Car>();
@@ -126,6 +144,31 @@ public class MainActivity extends Activity {
               jsonResult = sb.toString();
 
               return jsonResult;
+           }
+
+           private List<Car> parseJson(String jsonResult) throws JSONException {
+              List<Car> lstCars = new ArrayList<Car>();
+
+              JSONObject root = new JSONObject(jsonResult);
+              if(root.has("rec")) {
+                 JSONObject recObj = root.getJSONObject("rec");
+                 JSONObject vehiclesObj = recObj.getJSONObject("vehicles");
+                 JSONArray vehiclesArray = vehiclesObj.getJSONArray("vehicles");
+                 for(int i = 0;i < vehiclesArray.length();i++) {
+                    JSONObject vehicleObj = vehiclesArray.getJSONObject(i);
+                    JSONObject positionObj = vehicleObj.getJSONObject("position");
+
+                    double latitude = Double.parseDouble(positionObj.
+                          getString("latitude"));
+                    double longitude = Double.parseDouble(positionObj.
+                          getString("longitude"));
+                    GeoPoint coords = new GeoPoint(latitude, longitude);
+
+                    lstCars.add(new Car(coords,vehicleObj.getString("carName"),
+                          positionObj.getString("address")));
+                 }
+              }
+              return lstCars;
            }
         }
 
