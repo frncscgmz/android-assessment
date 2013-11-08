@@ -25,6 +25,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.os.AsyncTask;
 import android.view.Menu;
+import android.view.View;
 import android.widget.Toast;
 import android.util.Log;
 
@@ -35,7 +36,7 @@ public class MainActivity extends Activity {
 	private static final int CONECTION_TIMEOUT   = 10000;
         private static final String URL_CAR_SERVICE  = 
            "https://www.drive-now.com/php/metropolis/json.vehicle_filter?cit=6099";
-        private final String DEBUG_TAG        = this.getClass().
+        private final String DEBUG_TAG = this.getClass().
            getSimpleName();
 	
 	private IMapController controller;
@@ -59,7 +60,6 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		initLocation();
-                new CarsAsyncTask().execute(URL_CAR_SERVICE);
 	}
 	
 	private void initLocation() {
@@ -70,16 +70,20 @@ public class MainActivity extends Activity {
 		updateLocation(BERLIN);
 	}
 	
-	private void updateLocation(GeoPoint location){
-		this.controller.setZoom(12);
-		this.controller.setCenter(location);
-		
-		List<Car> carsInCloseRadius = filterCarsByDistance(getCars(), location, SEARCH_RADIUS_KM);
-		
-		//  ###################################### TO IMPLEMENT  ###########################################
-		
-		// Show cars on map
-	}
+        private void updateLocation(GeoPoint location){
+           this.controller.setZoom(12);
+           this.controller.setCenter(location);
+
+           List<Car> carsInCloseRadius = filterCarsByDistance(getCars(), location, SEARCH_RADIUS_KM);
+
+           //  ###################################### TO IMPLEMENT  ###########################################
+
+           // Show cars on map
+           if(carsInCloseRadius.size() > 0) {
+              Log.d(DEBUG_TAG,"carsInCloseRadius: "+carsInCloseRadius.size());
+              showCarsOnMap(carsInCloseRadius);
+           }
+        }
 
         private List<Car> getCars() {
 
@@ -87,8 +91,17 @@ public class MainActivity extends Activity {
 
            // Read the JSON data from https://www.drive-now.com/php/metropolis/json.vehicle_filter?cit=6099
            // Parse the data and fill a list of Car objects
+           List<Car> lstCars = new ArrayList<Car>();
+           try {
+              lstCars = new CarsAsyncTask().execute(URL_CAR_SERVICE).get();
+           } catch(Exception e) {}
 
-           return Collections.emptyList();
+           return lstCars;
+        }
+
+        public void goClick(View view) {
+           // Take latitude and longitude
+           updateLocation(BERLIN);
         }
 
         private class CarsAsyncTask extends AsyncTask<String, Void, List<Car>> {
@@ -115,12 +128,9 @@ public class MainActivity extends Activity {
               if(jsonResult != null) {
                  Log.d(DEBUG_TAG,jsonResult);
                  lstCars = parseJson(jsonResult);
-                 for(Car cr:lstCars) {
-                    Log.d(DEBUG_TAG,cr.name+" "+cr.address+" "+cr.position);
-                 }
               }
 
-              return new ArrayList<Car>();
+              return lstCars;
            }
 
            private String downloadUrl(String urlString) 
@@ -158,10 +168,8 @@ public class MainActivity extends Activity {
                     JSONObject vehicleObj = vehiclesArray.getJSONObject(i);
                     JSONObject positionObj = vehicleObj.getJSONObject("position");
 
-                    double latitude = Double.parseDouble(positionObj.
-                          getString("latitude"));
-                    double longitude = Double.parseDouble(positionObj.
-                          getString("longitude"));
+                    double latitude = positionObj.getDouble("latitude");
+                    double longitude = positionObj.getDouble("longitude");
                     GeoPoint coords = new GeoPoint(latitude, longitude);
 
                     lstCars.add(new Car(coords,vehicleObj.getString("carName"),
@@ -173,41 +181,45 @@ public class MainActivity extends Activity {
         }
 
 	
-	private List<Car> filterCarsByDistance(List<Car> cars, GeoPoint location, double searchRadiusKm) {
-		
-		//  ###################################### TO IMPLEMENT  ###########################################
-		
-		// Filter the list of cars by a location within the specified radius
-		
-		return Collections.emptyList();
-	}
+        private List<Car> filterCarsByDistance(List<Car> cars, GeoPoint location, double searchRadiusKm) {
 
-	private void showCarsOnMap(List<Car> cars) {
-		List<OverlayItem> items = new ArrayList<OverlayItem>();
+           //  ###################################### TO IMPLEMENT  ###########################################
 
-		for (Car car : cars){
-			items.add(new OverlayItem(car.name, car.address, car.position));
-		}
-	   
-		OnItemGestureListener<OverlayItem> listener = new OnItemGestureListener<OverlayItem>() {
-			@Override
-			public boolean onItemLongPress(int arg0, OverlayItem item) {
-			     Toast toast = Toast.makeText(getApplicationContext(), item.getTitle() + ", " + item.getSnippet(), Toast.LENGTH_LONG);
+           // Filter the list of cars by a location within the specified radius
+
+           Log.d(DEBUG_TAG,"filterCarsByDistance: "+cars.size());
+
+           return cars;
+        }
+
+        private void showCarsOnMap(List<Car> cars) {
+           List<OverlayItem> items = new ArrayList<OverlayItem>();
+
+           for (Car car : cars){
+              OverlayItem olItem = new OverlayItem(car.name, car.address, car.position); 
+              items.add(olItem);
+           }
+
+           OnItemGestureListener<OverlayItem> listener = new OnItemGestureListener<OverlayItem>() {
+              @Override
+              public boolean onItemLongPress(int arg0, OverlayItem item) {
+                 Toast toast = Toast.makeText(getApplicationContext(), item.getTitle() + ", " + item.getSnippet(), Toast.LENGTH_LONG);
                  toast.show();
                  return false;
-			}
-			@Override
-			public boolean onItemSingleTapUp(int arg0, OverlayItem item) {
-			     Toast toast = Toast.makeText(getApplicationContext(), item.getTitle() + ", " + item.getSnippet(), Toast.LENGTH_LONG);
+              }
+              @Override
+              public boolean onItemSingleTapUp(int arg0, OverlayItem item) {
+                 Toast toast = Toast.makeText(getApplicationContext(), item.getTitle() + ", " + item.getSnippet(), Toast.LENGTH_LONG);
                  toast.show();
                  return false;
-			}};
-		ItemizedIconOverlay<OverlayItem> overlay = new ItemizedIconOverlay<OverlayItem>(getApplicationContext(), items, listener);
-		
-		this.map.getOverlays().clear();
-		this.map.getOverlays().add(overlay);
-		this.map.invalidate();
-	}
+              }};
+           ItemizedIconOverlay<OverlayItem> overlay = new ItemizedIconOverlay<OverlayItem>(getApplicationContext(), items, listener);
+
+
+           this.map.getOverlays().clear();
+           this.map.getOverlays().add(overlay);
+           this.map.invalidate();
+        }
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {

@@ -26,7 +26,8 @@
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
        android:layout_below="@id/main_edt_longitude"
-       android:text="@string/btn_txt_go"/>
+       android:text="@string/btn_txt_go"
+       android:onClick="goClick"/>
 
     <org.osmdroid.views.MapView
        android:id="@+id/mapview"
