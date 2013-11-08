@@ -187,9 +187,17 @@ public class MainActivity extends Activity {
 
       // Filter the list of cars by a location within the specified radius
 
-      Log.d(DEBUG_TAG,"filterCarsByDistance: "+cars.size());
+      Log.d(DEBUG_TAG,"getCars: "+cars.size());
 
-      return cars;
+      List<Car> lstFiltered = new ArrayList<Car>();
+      for(Car cr:cars) {
+         int distance = cr.position.distanceTo(location);
+         if(distance / 1000 <= SEARCH_RADIUS_KM) {
+            lstFiltered.add(cr);
+         }
+      }
+
+      return lstFiltered;
    }
 
    private void showCarsOnMap(List<Car> cars) {
