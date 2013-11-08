@@ -3,4 +3,9 @@
 
     <string name="app_name">MapsApp</string>
     <string name="action_settings">Settings</string>
+
+    <!-- Main layout -->
+    <string name="btn_txt_go">Go!</string>
+    <string name="latitude_hint">Latitude</string>
+    <string name="longitude_hint">Longitude</string>
 </resources>

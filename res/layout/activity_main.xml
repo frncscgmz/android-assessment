@@ -8,13 +8,34 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".MainActivity" >
 
+    <EditText
+       android:id="@+id/main_edt_latitude"
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:hint="@string/latitude_hint" />
+
+    <EditText
+       android:id="@+id/main_edt_longitude"
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:layout_below="@id/main_edt_latitude"
+       android:hint="@string/longitude_hint" />
+
+    <Button
+       android:id="@+id/btn_main_go"
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:layout_below="@id/main_edt_longitude"
+       android:text="@string/btn_txt_go"/>
+
     <org.osmdroid.views.MapView
-        android:id="@+id/mapview"
-        android:layout_width="fill_parent"
-        android:layout_height="200dp"
-        android:layout_alignParentBottom="true"
-        android:layout_margin="0px"
-        android:padding="0px" >
+       android:id="@+id/mapview"
+       android:layout_width="fill_parent"
+       android:layout_height="200dp"
+       android:layout_below="@id/btn_main_go"
+       android:layout_alignParentBottom="true"
+       android:layout_margin="0px"
+       android:padding="0px" >
 
     </org.osmdroid.views.MapView>
-</RelativeLayout>
+ </RelativeLayout>
