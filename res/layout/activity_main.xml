@@ -12,6 +12,7 @@
        android:id="@+id/main_edt_latitude"
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
+       android:inputType="number"
        android:hint="@string/latitude_hint" />
 
     <EditText
@@ -19,6 +20,7 @@
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
        android:layout_below="@id/main_edt_latitude"
+       android:inputType="numberDecimal|numberSigned"
        android:hint="@string/longitude_hint" />
 
     <Button

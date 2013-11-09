@@ -27,6 +27,7 @@ import android.os.AsyncTask;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Toast;
+import android.widget.EditText;
 import android.util.Log;
 
 public class MainActivity extends Activity {
@@ -41,6 +42,8 @@ public class MainActivity extends Activity {
 
    private IMapController controller;
    private MapView map;
+   private EditText edtLatitude;
+   private EditText edtLongitude;
 
    private static class Car {
 
@@ -59,7 +62,34 @@ public class MainActivity extends Activity {
    protected void onCreate(Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
       setContentView(R.layout.activity_main);
+      edtLatitude  = (EditText)findViewById(R.id.main_edt_latitude);
+      edtLongitude = (EditText)findViewById(R.id.main_edt_longitude);
+
       initLocation();
+   }
+
+   public void goClick(View view) {
+      // Take latitude and longitude
+      boolean validation = true;
+      String latitude  = edtLatitude.getText().toString().trim();
+      String longitude = edtLongitude.getText().toString().trim();
+
+      if(latitude == null || latitude.equals("")) {
+         validation = false;
+      }
+
+      if(longitude == null || longitude.equals("")) {
+         validation = false;
+      }
+
+      if(validation) {
+         GeoPoint searchPoint = new GeoPoint(
+               Double.parseDouble(latitude),Double.parseDouble(longitude));
+         updateLocation(searchPoint);
+      } else {
+         Toast.makeText(this,getResources().getString(R.string.btn_txt_go),
+               Toast.LENGTH_SHORT).show();
+      }
    }
 
    private void initLocation() {
@@ -97,11 +127,6 @@ public class MainActivity extends Activity {
       } catch(Exception e) {}
 
       return lstCars;
-   }
-
-   public void goClick(View view) {
-      // Take latitude and longitude
-      updateLocation(BERLIN);
    }
 
    private class CarsAsyncTask extends AsyncTask<String, Void, List<Car>> {
