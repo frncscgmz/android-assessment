@@ -40,6 +40,7 @@ public class MainActivity extends Activity {
       "https://www.drive-now.com/php/metropolis/json.vehicle_filter?cit=6099";
    private final String DEBUG_TAG = this.getClass().
       getSimpleName();
+   private static GeoPoint newLocation = null;
 
    private IMapController controller;
    private MapView map;
@@ -84,9 +85,9 @@ public class MainActivity extends Activity {
       }
 
       if(validation) {
-         GeoPoint searchPoint = new GeoPoint(
+         newLocation = new GeoPoint(
                Double.parseDouble(latitude),Double.parseDouble(longitude));
-         updateLocation(searchPoint);
+         updateLocation(newLocation);
       } else {
          Toast.makeText(this,getResources().getString(R.string.btn_txt_go),
                Toast.LENGTH_SHORT).show();
@@ -98,36 +99,16 @@ public class MainActivity extends Activity {
       this.map.setBuiltInZoomControls(true);
       this.controller = map.getController();
 
-      updateLocation(BERLIN);
+      newLocation = BERLIN;
+      updateLocation(newLocation);
    }
 
    private void updateLocation(GeoPoint location){
       this.controller.setZoom(12);
       this.controller.setCenter(location);
 
-      List<Car> carsInCloseRadius = filterCarsByDistance(getCars(), location, SEARCH_RADIUS_KM);
-
-      //  ###################################### TO IMPLEMENT  ###########################################
-
-      // Show cars on map
-      Log.d(DEBUG_TAG,"carsInCloseRadius: "+carsInCloseRadius.size());
-      showCarsOnMap(carsInCloseRadius);
-   }
-
-   private List<Car> getCars() {
-
-      //  ###################################### TO IMPLEMENT  ###########################################
-
-      // Read the JSON data from https://www.drive-now.com/php/metropolis/json.vehicle_filter?cit=6099
-      // Parse the data and fill a list of Car objects
-      List<Car> lstCars = new ArrayList<Car>();
-      try {
-         lstCars = new CarsAsyncTask().execute(URL_CAR_SERVICE).get();
-      } catch(Exception e) {
-         Log.e(DEBUG_TAG,"Error: " + e);
-      }
-
-      return lstCars;
+      // Map is updated in AsyncTask
+      new CarsAsyncTask().execute(URL_CAR_SERVICE);
    }
 
    // AsyncTask gets the car list
@@ -149,6 +130,7 @@ public class MainActivity extends Activity {
       @Override
       protected List<Car> doInBackground(String... values) {
          try {
+            // getCars
             return loadCarsFromNetwork(values[0]);
          } catch (IOException e) {
             Log.e(DEBUG_TAG,"Error: " + e);
@@ -163,6 +145,11 @@ public class MainActivity extends Activity {
        protected void onPostExecute(List<Car> lstCars) {
           super.onPostExecute(lstCars);
           mDialog.dismiss();
+
+          // Get cars in radius and display them on the map
+          List<Car> carsInCloseRadius = filterCarsByDistance(lstCars, 
+                newLocation, SEARCH_RADIUS_KM);
+          showCarsOnMap(carsInCloseRadius);
        }
 
       private List<Car> loadCarsFromNetwork(String urlString) 
@@ -229,7 +216,7 @@ public class MainActivity extends Activity {
    }
 
 
-   private List<Car> filterCarsByDistance(List<Car> cars, GeoPoint location, double searchRadiusKm) {
+   public List<Car> filterCarsByDistance(List<Car> cars, GeoPoint location, double searchRadiusKm) {
 
       //  ###################################### TO IMPLEMENT  ###########################################
 
@@ -250,7 +237,7 @@ public class MainActivity extends Activity {
    }
 
    // Display cars in map
-   private void showCarsOnMap(List<Car> cars) {
+   public void showCarsOnMap(List<Car> cars) {
       List<OverlayItem> items = new ArrayList<OverlayItem>();
 
       for (Car car : cars){
