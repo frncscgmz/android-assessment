@@ -9,14 +9,14 @@
     tools:context=".MainActivity" >
 
     <EditText
-       android:id="@+id/main_edt_latitude"
+       android:id="@+id/latitude"
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
        android:inputType="numberDecimal|numberSigned"
        android:hint="@string/latitude_hint" />
 
     <EditText
-       android:id="@+id/main_edt_longitude"
+       android:id="@+id/longitude"
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
        android:layout_below="@id/main_edt_latitude"
@@ -24,7 +24,7 @@
        android:hint="@string/longitude_hint" />
 
     <Button
-       android:id="@+id/btn_main_go"
+       android:id="@+id/go"
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
        android:layout_below="@id/main_edt_longitude"

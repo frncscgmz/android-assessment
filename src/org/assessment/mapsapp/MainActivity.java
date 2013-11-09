@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import org.json.JSONException;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.os.AsyncTask;
 import android.view.Menu;
@@ -62,18 +63,18 @@ public class MainActivity extends Activity {
    protected void onCreate(Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
       setContentView(R.layout.activity_main);
-      edtLatitude  = (EditText)findViewById(R.id.main_edt_latitude);
-      edtLongitude = (EditText)findViewById(R.id.main_edt_longitude);
+      edtLatitude  = (EditText)findViewById(R.id.latitude);
+      edtLongitude = (EditText)findViewById(R.id.longitude);
 
       initLocation();
    }
 
    public void goClick(View view) {
-      // Take latitude and longitude
       boolean validation = true;
       String latitude  = edtLatitude.getText().toString().trim();
       String longitude = edtLongitude.getText().toString().trim();
 
+      // Validate inputs
       if(latitude == null || latitude.equals("")) {
          validation = false;
       }
@@ -109,10 +110,8 @@ public class MainActivity extends Activity {
       //  ###################################### TO IMPLEMENT  ###########################################
 
       // Show cars on map
-      if(carsInCloseRadius.size() > 0) {
-         Log.d(DEBUG_TAG,"carsInCloseRadius: "+carsInCloseRadius.size());
-         showCarsOnMap(carsInCloseRadius);
-      }
+      Log.d(DEBUG_TAG,"carsInCloseRadius: "+carsInCloseRadius.size());
+      showCarsOnMap(carsInCloseRadius);
    }
 
    private List<Car> getCars() {
@@ -124,12 +123,28 @@ public class MainActivity extends Activity {
       List<Car> lstCars = new ArrayList<Car>();
       try {
          lstCars = new CarsAsyncTask().execute(URL_CAR_SERVICE).get();
-      } catch(Exception e) {}
+      } catch(Exception e) {
+         Log.e(DEBUG_TAG,"Error: " + e);
+      }
 
       return lstCars;
    }
 
+   // AsyncTask gets the car list
    private class CarsAsyncTask extends AsyncTask<String, Void, List<Car>> {
+       private ProgressDialog mDialog;
+
+       public CarsAsyncTask() {
+          mDialog = new ProgressDialog(MainActivity.this);
+       }
+
+       @Override
+       protected void onPreExecute() {
+          super.onPreExecute();
+
+          this.mDialog.setMessage("Please wait...");
+          this.mDialog.show();
+       }
 
       @Override
       protected List<Car> doInBackground(String... values) {
@@ -143,6 +158,12 @@ public class MainActivity extends Activity {
             return new ArrayList<Car>();
          }
       }
+
+      @Override
+       protected void onPostExecute(List<Car> lstCars) {
+          super.onPostExecute(lstCars);
+          mDialog.dismiss();
+       }
 
       private List<Car> loadCarsFromNetwork(String urlString) 
          throws IOException,JSONException {
@@ -158,6 +179,7 @@ public class MainActivity extends Activity {
          return lstCars;
       }
 
+      // Gets JSON response from server through HTTP connection
       private String downloadUrl(String urlString) 
          throws IOException {
          String jsonResult = null;
@@ -181,6 +203,7 @@ public class MainActivity extends Activity {
          return jsonResult;
       }
 
+      // Parse JSON result and get list of cars
       private List<Car> parseJson(String jsonResult) throws JSONException {
          List<Car> lstCars = new ArrayList<Car>();
 
@@ -217,6 +240,7 @@ public class MainActivity extends Activity {
       List<Car> lstFiltered = new ArrayList<Car>();
       for(Car cr:cars) {
          int distance = cr.position.distanceTo(location);
+         // If distance between car and center location is inside radius
          if(distance / 1000 <= SEARCH_RADIUS_KM) {
             lstFiltered.add(cr);
          }
@@ -225,6 +249,7 @@ public class MainActivity extends Activity {
       return lstFiltered;
    }
 
+   // Display cars in map
    private void showCarsOnMap(List<Car> cars) {
       List<OverlayItem> items = new ArrayList<OverlayItem>();
 
