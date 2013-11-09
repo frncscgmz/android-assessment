@@ -19,7 +19,7 @@
        android:id="@+id/longitude"
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
-       android:layout_below="@id/main_edt_latitude"
+       android:layout_below="@id/latitude"
        android:inputType="numberDecimal|numberSigned"
        android:hint="@string/longitude_hint" />
 
@@ -27,7 +27,7 @@
        android:id="@+id/go"
        android:layout_width="fill_parent"
        android:layout_height="wrap_content"
-       android:layout_below="@id/main_edt_longitude"
+       android:layout_below="@id/longitude"
        android:text="@string/btn_txt_go"
        android:onClick="goClick"/>
 
@@ -35,7 +35,7 @@
        android:id="@+id/mapview"
        android:layout_width="fill_parent"
        android:layout_height="200dp"
-       android:layout_below="@id/btn_main_go"
+       android:layout_below="@id/go"
        android:layout_alignParentBottom="true"
        android:layout_margin="0px"
        android:padding="0px" >
